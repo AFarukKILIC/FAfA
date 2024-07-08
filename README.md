@@ -1,5 +1,5 @@
 
-# FAfA
+# FAfA: Factor Analysis for All
 
 <!-- badges: start -->
 <!-- badges: end -->
