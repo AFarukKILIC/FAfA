@@ -237,17 +237,17 @@ app_server <- function(input, output, session) {
 
   output$min_value <- renderInfoBox({
     validate(need(input$file1, 'Please upload your dataset.'))
-    infoBox(title = "min_value", value = min(my_data()), subtitle = "Minimum value of the variables", icon = icon("arrow-down"), color = "blue", fill = FALSE)
+    infoBox(title = "min_value", value = min(na.omit(my_data())), subtitle = "Minimum value of the variables", icon = icon("arrow-down"), color = "blue", fill = FALSE)
   })
 
   output$max_value <- renderInfoBox({
     validate(need(input$file1, 'Please upload your dataset.'))
-    infoBox(title = "max_value", value = max(my_data()), subtitle = "Maximum value of the variables", icon = icon("arrow-up"), color = "blue", fill = FALSE)
+    infoBox(title = "max_value", value = max(na.omit(my_data())), subtitle = "Maximum value of the variables", icon = icon("arrow-up"), color = "blue", fill = FALSE)
   })
 
   output$num_cat <- renderInfoBox({
     validate(need(input$file1, 'Please upload your dataset.'))
-    infoBox(title = "Categories", value = (max(my_data()) - min(my_data()) + 1), subtitle = "The number of categories", icon = icon("sort"), color = "yellow", fill = FALSE)
+    infoBox(title = "Categories", value = (max(na.omit(my_data())) - min(na.omit(my_data())) + 1), subtitle = "The number of categories", icon = icon("sort"), color = "yellow", fill = FALSE)
   })
 
   # Assumptions TAB
@@ -275,8 +275,8 @@ app_server <- function(input, output, session) {
 
   output$m_normality <- renderTable({
     validate(need(input$file1, 'Please upload your dataset.'))
-    mardia_normality <- mvnormalTest::mardia(my_data())
-    energy_normality <- energy::mvnorm.test(my_data(), R = 100)
+    mardia_normality <- mvnormalTest::mardia(na.omit(my_data()))
+    energy_normality <- energy::mvnorm.test(na.omit(my_data()), R = 100)
     normality_results <- data.frame(matrix(NA, 3, 3, dimnames = list(c("mardia_skewness", "mardia_kurtosis", "energy_test"), c("Statistic", "p_value", "Result"))))
 
     normality_results[1, 1] <- round(as.numeric(as.character(mardia_normality$mv.test[1, 2])), 2)
@@ -377,7 +377,7 @@ app_server <- function(input, output, session) {
       }
     }
 
-    factor_ret(x = my_data(), method = input$dimension_methods)
+    factor_ret(x = na.omit(my_data()), method = input$dimension_methods)
   }, rownames = TRUE)
 
   output$efa_result_str <- renderTable({
@@ -657,13 +657,14 @@ app_server <- function(input, output, session) {
   # About TAB
   output$about <- renderText({
     paste(
-      p(strong("This application's name is Factor Analysis for All (FAfA)")),
+      p(strong("Factor Analysis for All (FAfA)"),  strong(em("Version: 0.3"))),
       p(strong("Aim of the App:"),
         "This app has been prepared for researchers to use while performing exploratory and confirmatory factor analysis.
-       Examination of the EFA and CFA assumptions allows the dataset to be divided into two randomly,
-       EFA in one part and CFA in the other part, and reliability analysis done through a single program.
-       In addition, with the help of this app, in which the item weighting method is integrated,
-       item weighting can be done to examine whether the construct validity has improved or not.")
+		With the app, you can examine the data set in terms of EFA and CFA assumptions.
+		You can divide the dataset into two randomly chosen sets (EFA and CFA data sets).
+		You can perform reliability analysis. All of them are standalone ShinyApps.
+		Furthermore, this app allows you to weigh your items.
+		Item weighting can be used to determine whether construct validity has improved or not.")
     )
   })
 
@@ -691,9 +692,16 @@ app_server <- function(input, output, session) {
       p(strong("Meltem ACAR GUVENDIR"), tags$a(href = "https://personel.trakya.edu.tr/meltemacar/", "Click Here for Researcher's Profile!")),
       p(strong("Alperen YANDI"), tags$a(href = "https://www.linkedin.com/in/alperen-yandi-36404891?originalSubdomain=tr", "Click Here for Researcher's Profile!")),
       p(strong("Murat Dogan SAHIN"), tags$a(href = "https://avesis.anadolu.edu.tr/mdsahin", "Click Here for Researcher's Profile!")), br(),
+      p(strong("Sevda Cetin"), tags$a(href = "https://avesis.hacettepe.edu.tr/tsevda", "Click Here for Researcher's Profile!")), br(),
 
-      br(),
-      strong("New in this version:", br(),
+   br(),
+        strong("###############################################################"), br(),
+	      strong("New in Version: 0.3:", br(),
+               "Bugs were fixed for data sets with missing data.", br(),
+               "The bug of CFA fit indices saving was solved.", br(),
+               ), br(),
+		strong("###############################################################"), br(),
+      strong("New in Version: 0.2:", br(),
              "Some bugs were fixed", br(),
              "EGA analysis was added", br(),
              "Added some information in the analysis sections.", br(),
@@ -720,7 +728,7 @@ app_server_tr <- function(input, output, session) {
 
     lapply(packages, function(pkg) {
       if (!requireNamespace(pkg, quietly = TRUE)) {
-        stop(paste(pkg, "'paketi gerekli ancak yuklu degil.", sep = ""))
+        stop(paste(pkg, "Paketi gerekli ancak yuklu degil.", sep = ""))
       }
     })
   }
@@ -906,17 +914,17 @@ app_server_tr <- function(input, output, session) {
 
   output$min_value <- renderInfoBox({
     validate(need(input$file1, 'Lutfen veri setinizi yukleyiniz.'))
-    infoBox(title = "en_kucuk", value = min(my_data()), subtitle = "Degiskenin aldigi en kucuk deger", icon = icon("arrow-down"), color = "blue", fill = FALSE)
+    infoBox(title = "en_kucuk", value = min(na.omit(my_data())), subtitle = "Degiskenin aldigi en kucuk deger", icon = icon("arrow-down"), color = "blue", fill = FALSE)
   })
 
   output$max_value <- renderInfoBox({
     validate(need(input$file1, 'Lutfen veri setinizi yukleyiniz.'))
-    infoBox(title = "en_buyuk", value = max(my_data()), subtitle = "Degiskenin aldigi en buyuk deger", icon = icon("arrow-up"), color = "blue", fill = FALSE)
+    infoBox(title = "en_buyuk", value = max(na.omit(my_data())), subtitle = "Degiskenin aldigi en buyuk deger", icon = icon("arrow-up"), color = "blue", fill = FALSE)
   })
 
   output$num_cat <- renderInfoBox({
     validate(need(input$file1, 'Lutfen veri setinizi yukleyiniz.'))
-    infoBox(title = "Kategori", value = (max(my_data()) - min(my_data()) + 1), subtitle = "Kategori Sayisi", icon = icon("sort"), color = "yellow", fill = FALSE)
+    infoBox(title = "Kategori", value = (max(na.omit(my_data())) - min(na.omit(my_data())) + 1), subtitle = "Kategori Sayisi", icon = icon("sort"), color = "yellow", fill = FALSE)
   })
 
   # Assumptions TAB
@@ -944,8 +952,8 @@ app_server_tr <- function(input, output, session) {
 
   output$m_normality <- renderTable({
     validate(need(input$file1, 'Lutfen veri setinizi yukleyiniz.'))
-    mardia_normality <- mvnormalTest::mardia(my_data())
-    energy_normality <- energy::mvnorm.test(my_data(), R = 100)
+    mardia_normality <- mvnormalTest::mardia(na.omit(my_data()))
+    energy_normality <- energy::mvnorm.test(na.omit(my_data()), R = 100)
     normality_results <- data.frame(matrix(NA, 3, 3, dimnames = list(c("mardia_skewness", "mardia_kurtosis", "energy_test"), c("Statistic", "p_value", "Result"))))
 
     normality_results[1, 1] <- round(as.numeric(as.character(mardia_normality$mv.test[1, 2])), 2)
@@ -1046,7 +1054,7 @@ app_server_tr <- function(input, output, session) {
       }
     }
 
-    factor_ret(x = my_data(), method = input$dimension_methods)
+    factor_ret(x = na.omit(my_data()), method = input$dimension_methods)
   }, rownames = TRUE)
 
   output$efa_result_str <- renderTable({
@@ -1177,7 +1185,7 @@ app_server_tr <- function(input, output, session) {
       },
       content = function(file) {
         colnames(fit_results) <- c("Value")
-        utils::write.csv(fit_results, file, row.names = TRUE, col.names = FALSE)
+        utils::write.csv(fit_results, file, row.names = TRUE)
       }
     )
 
@@ -1277,7 +1285,7 @@ app_server_tr <- function(input, output, session) {
       paste("Lutfen maddelerin hangi boyutlara ait oldugunu dogru bir sekilde tanimlayiniz. Siz ", length(user_strata_definition), " degisken tanimladiniz. Ancak veri setinizde ", ncol(my_data()), " degisken bulunmaktadir.", sep = "")
     } else {
       result_rel <- reliability_func(my_data(), method = input$reliability_coeff)
-      paste("Guvenirlik Katasiyiniz: ", input$reliability_coeff, result_rel, sep = "")
+      paste("Guvenirlik Katsayiniz: ", input$reliability_coeff, result_rel, sep = "")
     }
   })
 
@@ -1326,11 +1334,13 @@ app_server_tr <- function(input, output, session) {
   # About TAB
   output$about <- renderText({
       paste(
-        p(strong("Bu uygulamanin adi Herkes icin Faktor Analizi (Factor Analysis for All [FAfA])'dir.")),
+        p(strong("Herkes icin Faktor Analizi (Factor Analysis for All [FAfA])"),  strong(em("Version: 0.3"))),
         p(strong("Uygulamanin Amaci:"),
-          "Bu uygulama arastirmacilara acimlayici ve dogrulayici faktor analizi gerceklestirirken tum surecleri tek bir uygulamada yapabilmelerini saglamaktir.
+          "Bu uygulamaninamaci arastirmacilara acimlayici ve dogrulayici faktor analizlerini gerceklestirirken yardimci olmaktir.
+          Diger yazilimlardan farki ise hem AFA hem DFA hem de guvenirlik analizlerindeki tum surecleri
+          tek bir uygulamada yapilabilmesine imkan vermesidir.
         AFA ve DFA varsayimlarinin kontrolu, veri setini rassal olarak ikiye bolme (AFA ve DFA icin), farkli guvenirlik katsayilari bu uygulama ile incelenebilir.
-        Buna ek olarak madde agirliklandirmasi de bu uygulamaya eklenmistir. Bu yontem bazi durumlarda yapi gecerligini yukseltebilmektedir."
+        Buna ek olarak madde agirliklandirmasi da bu uygulamaya eklenmistir. Bu yontem bazi durumlarda yapi gecerligini yukseltebilmektedir."
         )
       )
     })
@@ -1359,16 +1369,22 @@ app_server_tr <- function(input, output, session) {
         p(strong("Meltem ACAR GUVENDIR"), tags$a(href = "https://personel.trakya.edu.tr/meltemacar/", "Click Here for Researcher's Profile!")),
         p(strong("Alperen YANDI"), tags$a(href = "https://www.linkedin.com/in/alperen-yandi-36404891?originalSubdomain=tr", "Click Here for Researcher's Profile!")),
         p(strong("Murat Dogan SAHIN"), tags$a(href = "https://avesis.anadolu.edu.tr/mdsahin", "Click Here for Researcher's Profile!")), br(),
+        p(strong("Sevda Cetin"), tags$a(href = "https://avesis.hacettepe.edu.tr/tsevda", "Click Here for Researcher's Profile!")), br(),
 
         br(),
-        strong("Bu versiyonda yeni olanlar:", br(),
+        strong("###############################################################"), br(),
+        strong("Version: 0.3'te yeni olanlar:", br(),
+               "Kayip veri bulundugu durumdaki hatalar giderildi.", br(),
+               "DFA uyum indekslerinin kaydedilmesindeki hata giderildi.", br(),
+               ), br(),
+        strong("###############################################################"), br(),
+        strong("Version: 0.2'de yeni olanlar:", br(),
                "Bazi hatalar duzeltildi", br(),
                "EGA analizi eklendi", br(),
                "Analiz sekmesine ekstra bilgi eklendi.", br(),
                "DFA faktor yuklerinin raporlanmasi kismi gelistirildi.", br(),
                "Modifikasyon onerileri onem duzeyine gore siralandi."
-        ), br(),
-        em("Version: 0.2")
+        )
       )
     })
 }

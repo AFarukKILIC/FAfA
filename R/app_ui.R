@@ -1364,10 +1364,10 @@ Agirliklandirilmis veri setini kullanarak t-testi, ANOVA ya da yapisal esitlik m
                                 # Weight
                                 column(width = 11,
                                        box(
-                                         title = "Eger madde agirliklandirmasini kullanmak istiyorsaniz lutfen bu butonu kullaniniz.",
+                                         title = "Madde agirliklandirmasi icin asagidaki butonu kullaniniz.",
                                          collapsible = TRUE,
                                          strong("Item weighting"), br(),
-                                         actionButton(inputId = "weight_item", "Weight My Items"), br(),
+                                         actionButton(inputId = "weight_item", "Maddeleri Agirliklandir"), br(),
                                          tableOutput(outputId = "weighted_scores") %>% shinycssloaders::withSpinner(type = 8, color = "#728FCE"),
                                          strong("Agirliklandirilmis veri setini bilgisayariniza kaydetmek icin su butonu kullanabilirsiniz:"), br(),
                                          downloadButton(outputId = "download_weighted_scores", label = "Agirliklandirilmis Puanlari Kaydet"), br(),
