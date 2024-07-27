@@ -123,9 +123,9 @@ app_server <- function(input, output, session) {
 
     # Mahalanobis Distance
     distance <- as.matrix(stats::mahalanobis(x, colMeans(x), cov = stats::cov(x)))
-    Mah_significant <- x %>%
-      dplyr::transmute(Row_Number = 1:nrow(x), MD = distance, MD_p = stats::pchisq(distance, df = (ncol(x) - 1), lower.tail = FALSE)) %>%
-      dplyr::filter(MD_p <= 0.001)
+    Mah_sign <- x %>%
+      dplyr::transmute(Row_Number = 1:nrow(x), MD = distance, MD_p = stats::pchisq(distance, df = (ncol(x) - 1), lower.tail = FALSE))
+    Mah_significant <- Mah_sign[Mah_sign[,3]<= 0.001,]
 
     # Mardia's kurtosis and skewness
     mardia_kurt <- mvnormalTest::mardia(x)$mv.test[2, ]
@@ -691,7 +691,7 @@ app_server <- function(input, output, session) {
       p(strong("Basak ERDEM KARA:"), tags$a(href = "https://avesis.anadolu.edu.tr/basakerdem", "Click Here for Researcher's Profile!")),
       p(strong("Meltem ACAR GUVENDIR"), tags$a(href = "https://personel.trakya.edu.tr/meltemacar/", "Click Here for Researcher's Profile!")),
       p(strong("Alperen YANDI"), tags$a(href = "https://www.linkedin.com/in/alperen-yandi-36404891?originalSubdomain=tr", "Click Here for Researcher's Profile!")),
-      p(strong("Murat Dogan SAHIN"), tags$a(href = "https://avesis.anadolu.edu.tr/mdsahin", "Click Here for Researcher's Profile!")), br(),
+      p(strong("Murat Dogan SAHIN"), tags$a(href = "https://avesis.anadolu.edu.tr/mdsahin", "Click Here for Researcher's Profile!")),
       p(strong("Sevda Cetin"), tags$a(href = "https://avesis.hacettepe.edu.tr/tsevda", "Click Here for Researcher's Profile!")), br(),
 
    br(),
@@ -706,8 +706,8 @@ app_server <- function(input, output, session) {
              "EGA analysis was added", br(),
              "Added some information in the analysis sections.", br(),
              "Reporting of CFA factor loadings has been improved.", br(),
-             "Added modification suggestions by sorted order.", br()),
-      em("Version: 0.2")
+             "Added modification suggestions by sorted order.")
+
     )
   })
 }
@@ -1368,7 +1368,7 @@ app_server_tr <- function(input, output, session) {
         p(strong("Basak ERDEM KARA:"), tags$a(href = "https://avesis.anadolu.edu.tr/basakerdem", "Click Here for Researcher's Profile!")),
         p(strong("Meltem ACAR GUVENDIR"), tags$a(href = "https://personel.trakya.edu.tr/meltemacar/", "Click Here for Researcher's Profile!")),
         p(strong("Alperen YANDI"), tags$a(href = "https://www.linkedin.com/in/alperen-yandi-36404891?originalSubdomain=tr", "Click Here for Researcher's Profile!")),
-        p(strong("Murat Dogan SAHIN"), tags$a(href = "https://avesis.anadolu.edu.tr/mdsahin", "Click Here for Researcher's Profile!")), br(),
+        p(strong("Murat Dogan SAHIN"), tags$a(href = "https://avesis.anadolu.edu.tr/mdsahin", "Click Here for Researcher's Profile!")),
         p(strong("Sevda Cetin"), tags$a(href = "https://avesis.hacettepe.edu.tr/tsevda", "Click Here for Researcher's Profile!")), br(),
 
         br(),
