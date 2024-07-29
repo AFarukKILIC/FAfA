@@ -800,9 +800,9 @@ app_server_tr <- function(input, output, session) {
 
     # Mahalanobis Distance
     distance <- as.matrix(stats::mahalanobis(x, colMeans(x), cov = stats::cov(x)))
-    Mah_significant <- x %>%
-      dplyr::transmute(Row_Number = 1:nrow(x), MD = distance, MD_p = stats::pchisq(distance, df = (ncol(x) - 1), lower.tail = FALSE)) %>%
-      dplyr::filter(MD_p <= 0.001)
+    Mah_sign <- x %>%
+      dplyr::transmute(Row_Number = 1:nrow(x), MD = distance, MD_p = stats::pchisq(distance, df = (ncol(x) - 1), lower.tail = FALSE))
+    Mah_significant <- Mah_sign[Mah_sign[,3]<= 0.001,]
 
     # Mardia's kurtosis and skewness
     mardia_kurt <- mvnormalTest::mardia(x)$mv.test[2, ]
