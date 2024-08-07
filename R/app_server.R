@@ -1369,7 +1369,7 @@ app_server_tr <- function(input, output, session) {
         p(strong("Meltem ACAR GUVENDIR"), tags$a(href = "https://personel.trakya.edu.tr/meltemacar/", "Click Here for Researcher's Profile!")),
         p(strong("Alperen YANDI"), tags$a(href = "https://www.linkedin.com/in/alperen-yandi-36404891?originalSubdomain=tr", "Click Here for Researcher's Profile!")),
         p(strong("Murat Dogan SAHIN"), tags$a(href = "https://avesis.anadolu.edu.tr/mdsahin", "Click Here for Researcher's Profile!")),
-        p(strong("Sevda Cetin"), tags$a(href = "https://avesis.hacettepe.edu.tr/tsevda", "Click Here for Researcher's Profile!")), br(),
+        p(strong("Sevda Cetin"), tags$a(href = "https://www.researchgate.net/profile/Sevda-Cetin-2", "Click Here for Researcher's Profile!")), br(),
 
         br(),
         strong("###############################################################"), br(),
