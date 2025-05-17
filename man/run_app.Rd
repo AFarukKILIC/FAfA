@@ -5,7 +5,6 @@
 \title{Run the Shiny Application}
 \usage{
 run_app(
-  lang = "eng",
   onStart = NULL,
   options = list(),
   enableBookmarking = NULL,
@@ -14,28 +13,29 @@ run_app(
 )
 }
 \arguments{
-\item{lang}{A character string specifying the language of the application. Options are "eng"
-(default) for English and "tr" for Turkish.}
+\item{onStart}{A function that will be called before the app is actually run.
+This is only needed for \code{shinyAppObj}, since in the \code{shinyAppDir}
+case, a \code{global.R} file can be used for this purpose.}
 
-\item{onStart}{A function to execute when the app starts.}
+\item{options}{Named options that should be passed to the \code{runApp} call
+(these can be any of the following: "port", "launch.browser", "host", "quiet",
+"display.mode" and "test.mode"). You can also specify \code{width} and
+\code{height} parameters which provide a hint to the embedding environment
+about the ideal height/width for the app.}
 
-\item{options}{A list of options to be passed to \code{shiny::shinyApp}.}
+\item{enableBookmarking}{Can be one of \code{"url"}, \code{"server"}, or
+\code{"disable"}. The default value, \code{NULL}, will respect the setting from
+any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}}. See \code{\link[shiny:enableBookmarking]{enableBookmarking()}}
+for more information on bookmarking your app.}
 
-\item{enableBookmarking}{Enable bookmarking in the app.}
+\item{uiPattern}{A regular expression that will be applied to each \code{GET}
+request to determine whether the \code{ui} should be used to handle the
+request. Note that the entire request path must match the regular
+expression in order for the match to be considered successful.}
 
-\item{uiPattern}{A pattern to be matched for the app's UI.}
-
-\item{...}{Additional arguments to pass to \code{golem_opts}.}
-}
-\value{
-This function does not return a value. It launches the Shiny application interface.
+\item{...}{arguments to pass to golem_opts.
+See \code{?golem::get_golem_options} for more details.}
 }
 \description{
-This function launches the Shiny application for performing comprehensive factor analysis.
-The application allows users to upload datasets, check assumptions, manipulate data, perform
-exploratory and confirmatory factor analysis, and conduct reliability analysis and item weighting.
-}
-\details{
-The application supports multiple languages. By default, it runs in English. However, it can
-be switched to Turkish by setting the \code{lang} parameter to "tr".
+Run the Shiny Application
 }

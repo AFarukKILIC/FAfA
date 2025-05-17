@@ -18,8 +18,6 @@
 ## install.packages('attachment') # if needed.
 attachment::att_amend_desc()
 
-
-
 ## Add modules ----
 ## Create a module infrastructure in R/
 golem::add_module(name = "name_of_module1", with_test = TRUE) # Name of the module
@@ -36,6 +34,7 @@ golem::add_js_file("script")
 golem::add_js_handler("handlers")
 golem::add_css_file("custom")
 golem::add_sass_file("custom")
+golem::add_any_file("file.json")
 
 ## Add internal datasets ----
 ## If you have data in your package
@@ -74,14 +73,6 @@ usethis::use_github_action_check_standard()
 usethis::use_github_action_check_full()
 # Add action for PR
 usethis::use_github_action_pr_commands()
-
-# Travis CI
-usethis::use_travis()
-usethis::use_travis_badge()
-
-# AppVeyor
-usethis::use_appveyor()
-usethis::use_appveyor_badge()
 
 # Circle CI
 usethis::use_circleci()
