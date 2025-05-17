@@ -42,8 +42,8 @@ reliability_ui <- function(id) {
             ns("reliability_coefficient_select"), 
             label = "Choose Reliability Coefficient:",
             choices = c(
-              "Cronbach's Alpha (Internal Consistency)" = "alpha",
-              "McDonald's Omega (Total & Hierarchical)" = "omega", 
+              "Cronbach's Alpha" = "alpha",
+              "McDonald's Omega" = "omega", 
               "Armor's Theta (Principal Components based)" = "theta",
               "Structural Reliability (Model-based, requires CFA structure)" = "structure",
               "Stratified Alpha (For scales with subscales/strata)" = "s_alpha"
