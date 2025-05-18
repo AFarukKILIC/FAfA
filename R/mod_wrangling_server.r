@@ -32,8 +32,6 @@ wrangling_server_ex_var <- function(input, output, session, data) {
 
     # Attempt to parse the input string (e.g., "1,3,5" or "1, 3:5, 7")
     tryCatch({
-      # A more robust way to parse mixed single numbers and ranges:
-      # Split by comma, then process each part.
       parts <- trimws(unlist(strsplit(excluded_vars_str, ",")))
       user_excluded_indices <- integer(0)
 
@@ -215,7 +213,6 @@ wrangling_server_split <- function(input, output, session, data) {
 #' @importFrom stats na.omit
 #' @noRd
 wrangling_server_outliers <- function(input, output, session, data) {
-  # reactiveValues to store outlier analysis results and data without outliers
   outlier_info_rv <- reactiveValues(
     identified_outliers_table = NULL,
     outlier_count = NULL,
@@ -228,45 +225,27 @@ wrangling_server_outliers <- function(input, output, session, data) {
     validate(need(input$mah_p_value_threshold_input, "Please specify a p-value threshold for Mahalanobis distance."))
 
     current_data <- data()
-    # Ensure current_data is not NULL before proceeding
     if(is.null(current_data)){
         showNotification("Data is not available for outlier detection.", type="warning")
+        outlier_info_rv$identified_outliers_table <- NULL
+        outlier_info_rv$outlier_count <- NULL
+        outlier_info_rv$original_row_indices_of_outliers <- NULL
         return()
     }
 
     p_threshold <- as.numeric(input$mah_p_value_threshold_input)
-
-    if (!exists("assumptions")) {
-      showNotification("Error: The 'assumptions' function for outlier detection is not found. Please check 'utils.R'.", type = "error", duration = 10)
-      return()
-    }
-
-    numeric_cols <- sapply(current_data, is.numeric)
-    if(sum(numeric_cols) < 2 ){ # Loosened from ncol(current_data) to allow for non-numeric columns if assumptions() handles it
-        showNotification(paste0("Mahalanobis distance requires at least two numeric columns for calculation. Found ", sum(numeric_cols), " numeric columns. Ensure relevant data is numeric."), type = "warning", duration=10)
-        # The assumptions function in utils.R should ideally handle subsetting to numeric columns if necessary,
-        # or this check should be more stringent if all columns passed to assumptions must be numeric.
-        # For now, this is a warning.
-    }
-    if(nrow(current_data) < sum(numeric_cols) && sum(numeric_cols) > 0){ # Check if N < P for numeric subset
-        showNotification("Warning: The number of observations is less than the number of numeric variables. Mahalanobis distance may not be stable or calculable.", type="warning", duration=10)
-    }
-
+    analysis_results <- NULL
 
     tryCatch({
-      # Pass the p_threshold to the assumptions function
-      # Ensure your assumptions function in utils.R accepts and uses mah_p_threshold
       analysis_results <- assumptions(current_data, mah_p_threshold = p_threshold)
 
-      outlier_info_rv$identified_outliers_table <- analysis_results$Mah_significant_outliers # Adjusted name from utils.R
-      outlier_info_rv$outlier_count <- analysis_results$n_outliers_found # Adjusted name from utils.R
+      # Store results in reactiveValues - Ensure names match what assumptions() returns.
+      # Based on your function and our latest utils.R, it should be 'Mah_significant' and 'n_outlier'.
+      outlier_info_rv$identified_outliers_table <- analysis_results$Mah_significant
+      outlier_info_rv$outlier_count <- analysis_results$n_outlier
 
-      # The 'assumptions' function in utils.R now returns 'Row_Number_In_Complete_Data'
-      # which refers to row numbers *after* na.omit was applied within that function.
-      # This is what we need for removing rows from the 'current_data' if it was also na.omitted
-      # at the start of the assumptions() function.
-      if (!is.null(analysis_results$Mah_significant_outliers) && "Row_Number_In_Complete_Data" %in% colnames(analysis_results$Mah_significant_outliers)) {
-        outlier_info_rv$original_row_indices_of_outliers <- analysis_results$Mah_significant_outliers$Row_Number_In_Complete_Data
+      if (!is.null(outlier_info_rv$identified_outliers_table) && "Row_Number_In_Complete_Data" %in% colnames(outlier_info_rv$identified_outliers_table)) {
+        outlier_info_rv$original_row_indices_of_outliers <- outlier_info_rv$identified_outliers_table$Row_Number_In_Complete_Data
       } else {
         outlier_info_rv$original_row_indices_of_outliers <- NULL
       }
@@ -275,13 +254,13 @@ wrangling_server_outliers <- function(input, output, session, data) {
         if (is.null(outlier_info_rv$identified_outliers_table) || nrow(outlier_info_rv$identified_outliers_table) == 0) {
           data.frame(Message = "No outliers detected at the specified p-value threshold.")
         } else {
-          # Display relevant columns, e.g., Row_Number_In_Complete_Data, MD, MD_p
-          # Ensure these column names match what `assumptions` function returns
+          # Display relevant columns
           outlier_info_rv$identified_outliers_table[, c("Row_Number_In_Complete_Data", "MD", "MD_p"), drop = FALSE]
         }
       }, striped = TRUE, hover = TRUE, bordered = TRUE, spacing = "s", digits = 3)
 
       output$outlier_count_text <- renderText({
+        # Use %||% to provide a fallback if outlier_count is NULL (e.g., before first calculation)
         paste("Number of outliers identified (p <", p_threshold, "):", outlier_info_rv$outlier_count %||% 0)
       })
 
@@ -289,67 +268,74 @@ wrangling_server_outliers <- function(input, output, session, data) {
 
     }, error = function(e) {
       showNotification(paste("Error during outlier detection:", e$message), type = "error", duration = 7)
-      outlier_info_rv$identified_outliers_table <- NULL
-      outlier_info_rv$outlier_count <- NULL
+      # Clear RVs on error to prevent showing stale or incorrect data
+      outlier_info_rv$identified_outliers_table <- data.frame(Error = paste("Outlier detection failed:", e$message)) # Show error in table
+      outlier_info_rv$outlier_count <- 0 # Set count to 0 on error
       outlier_info_rv$original_row_indices_of_outliers <- NULL
-      output$outliers_table <- renderTable({ data.frame(Error = e$message) })
-      output$outlier_count_text <- renderText({"Error in outlier detection."})
+      
+      # Update UI to show error
+      output$outliers_table <- renderTable({ outlier_info_rv$identified_outliers_table })
+      output$outlier_count_text <- renderText({ paste("Error in outlier detection. Found 0 outliers.")})
+      
+      # Log the detailed error to the R console for developer (optional, can be removed for production)
+      # message("--- ERROR CAUGHT in wrangling_server_outliers ---")
+      # print(e)
+      # message("--- END OF ERROR DETAILS ---")
     })
   })
 
   observeEvent(input$remove_outliers_button, {
     validate(
       need(data(), "Please upload data first."),
-      # Check outlier_count instead of the table itself for deciding if removal is possible
       need(!is.null(outlier_info_rv$outlier_count), "Please identify outliers first using the 'Identify Outliers' button.")
     )
 
-    current_data_for_removal <- data() # This is the data *before* na.omit inside assumptions()
-
-    # The outlier_info_rv$original_row_indices_of_outliers are indices from the
-    # na.omitted data *within* the assumptions() function.
-    # To remove them from `current_data_for_removal`, we first need to apply the same na.omit
-    # that assumptions() did, then remove, OR ensure assumptions() returns indices
-    # relative to the data it received if that data was not na.omitted by this module.
-    # Given utils.R's assumptions() now does na.omit internally:
+    current_data_for_removal <- data() 
 
     if (is.null(current_data_for_removal)) {
         showNotification("Original data not available for outlier removal.", type="error")
         return()
     }
-
-    # Re-create the 'complete case' version of current_data, similar to what assumptions() does
-    # This is crucial if current_data_for_removal could have NAs that assumptions() would have removed
-    # before calculating Mahalanobis distances.
-    # The `clean_missing_data` in app.R should already provide complete data to this module.
-    # So, `current_data_for_removal` should ideally be complete cases.
-
-    data_complete_cases_for_removal <- stats::na.omit(current_data_for_removal)
-    # ^ This line is key. If current_data_for_removal from app.R is already na.omitted by clean_missing_data,
-    # then this na.omit might be redundant but harmless. If not, it's essential.
-    # The `Row_Number_In_Complete_Data` from utils.R refers to rows in `data_complete_cases_for_removal`.
+    
+    # Prepare data for removal by applying same cleaning as in assumptions()
+    x_numeric_internal_removal <- as.data.frame(lapply(current_data_for_removal, function(col) {
+        if(!is.numeric(col)) suppressWarnings(as.numeric(as.character(col))) else col
+    }))
+    x_complete_for_removal <- stats::na.omit(x_numeric_internal_removal)
+    
+    if(nrow(x_complete_for_removal) > 0 && ncol(x_complete_for_removal) > 0) {
+        col_variances_removal <- apply(x_complete_for_removal, 2, stats::var, na.rm = TRUE)
+        if (any(col_variances_removal == 0, na.rm = TRUE)) {
+            x_complete_for_removal <- x_complete_for_removal[, col_variances_removal > 0, drop = FALSE]
+        }
+    }
 
     if (is.null(outlier_info_rv$original_row_indices_of_outliers) || length(outlier_info_rv$original_row_indices_of_outliers) == 0) {
-      outlier_info_rv$data_without_outliers <- current_data_for_removal # No outliers to remove, return original
+      outlier_info_rv$data_without_outliers <- current_data_for_removal 
       showNotification("No outliers were identified or selected for removal. Using the current dataset.", type = "info")
     } else {
       indices_to_remove_from_complete <- outlier_info_rv$original_row_indices_of_outliers
 
-      if(length(indices_to_remove_from_complete) > 0 && length(indices_to_remove_from_complete) < nrow(data_complete_cases_for_removal)) {
-          # Remove rows from the 'data_complete_cases_for_removal'
-          data_after_removing_from_complete <- data_complete_cases_for_removal[-indices_to_remove_from_complete, , drop = FALSE]
+      if(nrow(x_complete_for_removal) == 0){
+          showNotification("Error: No data remains after NA/zero-variance cleaning for outlier removal step.", type="error")
+          outlier_info_rv$data_without_outliers <- current_data_for_removal
+          return()
+      }
+
+      if(length(indices_to_remove_from_complete) > 0 && length(indices_to_remove_from_complete) < nrow(x_complete_for_removal)) {
+          data_after_removing_from_complete <- x_complete_for_removal[-indices_to_remove_from_complete, , drop = FALSE]
           outlier_info_rv$data_without_outliers <- data_after_removing_from_complete
 
           showNotification(
             paste0(
-              length(indices_to_remove_from_complete), " outlier(s) removed. The dataset (based on complete cases used for MD) now has ",
+              length(indices_to_remove_from_complete), " outlier(s) removed. The dataset now has ",
               nrow(outlier_info_rv$data_without_outliers), " observations."
             ), type = "message"
           )
-      } else if (length(indices_to_remove_from_complete) >= nrow(data_complete_cases_for_removal)) {
-          showNotification("Error: Attempting to remove all or more rows than available in the complete-case dataset. Outliers not removed.", type="error")
-          outlier_info_rv$data_without_outliers <- current_data_for_removal # Fallback to original
-      } else { # length is 0
+      } else if (length(indices_to_remove_from_complete) >= nrow(x_complete_for_removal)) {
+          showNotification("Error: Attempting to remove all or more rows than available in the processed dataset. Outliers not removed.", type="error")
+          outlier_info_rv$data_without_outliers <- current_data_for_removal 
+      } else { 
           outlier_info_rv$data_without_outliers <- current_data_for_removal
           showNotification("No valid outlier indices found for removal. Using the current dataset.", type = "warning")
       }
@@ -365,9 +351,9 @@ wrangling_server_outliers <- function(input, output, session, data) {
       write.csv(outlier_info_rv$data_without_outliers, file, row.names = FALSE)
     }
   )
-  # Return the reactive data for chaining in app.R
   return(reactive(outlier_info_rv$data_without_outliers))
 }
+
 
 # Helper for default NULL values (used in outlier_count_text)
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0 || all(is.na(x))) y else x
