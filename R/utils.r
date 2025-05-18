@@ -192,7 +192,7 @@ nrow(a)
         Mah_significant <- x_complete %>% # Use x_complete here
           dplyr::mutate(Row_Number_In_Complete_Data = 1:nrow(x_complete), # Row number within x_complete
                         MD = as.numeric(distance), # Ensure MD is numeric
-                        MD_p = stats::pchisq(MD, df = (ncol(x_complete)-1), lower.tail = FALSE)) %>%
+                        MD_p = stats::pchisq(MD, df = (ncol(x_complete)), lower.tail = FALSE)) %>%
           dplyr::filter(MD_p <= mah_p_threshold) %>%
           dplyr::select(Row_Number_In_Complete_Data, MD, MD_p) %>% # Select only relevant columns
           dplyr::arrange(MD_p,  dplyr::desc(MD))
