@@ -1,6 +1,3 @@
-# About Server Module
-# No specific complex server logic here, mainly rendering HTML content.
-# Ensure shiny (for p, strong, br, tags$a) is available.
 
 about_server <- function(input, output, session) {
 
@@ -72,4 +69,44 @@ about_server <- function(input, output, session) {
       p(em("Current Version: 0.3"))
     )
   })
+
+#to cite
+output$citation_info_html <- renderUI({
+  tagList(
+    tags$p(
+      "If you use this package in your work, please cite it as follows:"
+    ),
+    tags$br(),
+    tags$p(
+      style = "font-family: monospace; margin-left: 20px;", 
+      "Kilic, A. F. (2024). FAfA: Factor analysis for all: An R package to conduct factor analysis with RShiny application. ",
+      tags$em("Journal of Measurement and Evaluation in Education and Psychology, 15"), 
+	  HTML("(4), 446&ndash;451. "),
+      tags$a(href = "https://doi.org/10.21031/epod.1555805", target = "_blank", "https://doi.org/10.21031/epod.1555805")
+    ),
+    tags$br(),
+    tags$p(
+      "BibTeX citation:"
+    ),
+    tags$pre(
+      style = "font-family: monospace; background-color: #f0f0f0; padding: 10px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word;",
+      paste(
+        "@article{Kilic2024FAfA,",
+        "  author    = {Kilic, Abdullah Faruk},",
+        "  title     = {FAfA: Factor analysis for all An R package to conduct factor analysis with RShiny application},",
+        "  journal   = {Journal of Measurement and Evaluation in Education and Psychology},",
+        "  volume    = {15},",
+        "  number    = {4},",
+        " pages = {446\u2013451},",
+        "  year      = {2024},",
+        "  doi       = {10.21031/epod.1555805},",
+        "  URL       = {https://doi.org/10.21031/epod.1555805}",
+        "}",
+        sep = "\n" 
+      )
+  )
+  )
+})
+
+
 }

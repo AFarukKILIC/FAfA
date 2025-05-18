@@ -43,6 +43,20 @@ about_ui <- function(id) {
           htmlOutput(ns("contributors_version_html"))
         )
       )
+    ),
+  fluidRow(
+      column(
+        width = 11,
+        box(
+          title = "How to Cite This Package?",
+          collapsible = TRUE,
+          collapsed = FALSE, 
+          status = "primary", 
+          solidHeader = TRUE,
+          width = NULL,
+          htmlOutput(ns("citation_info_html")) 
+        )
+      )
     )
   )
 }
