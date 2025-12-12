@@ -5,3 +5,8 @@ inst/doc
 .Rproj.user/
 dev/
 cran-comments.md
+.Rhistory
+.RData
+.httr-oauth
+.DS_Store
+.quarto

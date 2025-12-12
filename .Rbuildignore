@@ -5,3 +5,12 @@ dev_history.R
 ^dev$
 $run_dev.*
 ^.here$
+^FAfA\.Rproj$
+^dev$
+^dev/.*
+^git$
+^.gitignore$
+^LICENSE\.md$
+^README\.Rmd$
+^CODE_OF_CONDUCT\.md$
+^cran-comments\.md$
