@@ -19,30 +19,28 @@
 ## to change the name in the app_sys() function in app_config.R /!\
 ##
 golem::fill_desc(
-  pkg_name = "FAfA", # The name of the golem package containing the app (typically lowercase, no underscore or periods)
-  pkg_title = "Factor Analysis for All", # What the Package Does (One Line, Title Case, No Period)
-  pkg_description = "Provides a comprehensive Shiny-based graphical user interface for conducting
-    a wide range of factor analysis procedures. 'FAfA' (Factor Analysis for All)
-    guides users through data uploading, assumption checking (descriptives,
-    collinearity, multivariate normality, outliers), data wrangling (variable
-    exclusion, data splitting), factor retention analysis (e.g., Parallel Analysis,
-    Hull method, EGA), Exploratory Factor Analysis (EFA) with various rotation
-    and extraction methods, Confirmatory Factor Analysis (CFA) for model testing,
-    Reliability Analysis (e.g., Cronbach's Alpha, McDonald's Omega), Measurement
-    Invariance testing across groups, and item weighting techniques. The application
-    leverages established R packages such as 'lavaan' and 'psych' to perform
-    these analyses, offering an accessible platform for researchers and students.
-    Results are presented in user-friendly tables and plots, with options for
-    downloading outputs.", # What the package does (one paragraph).
-  authors = person(
-    given = "Abdullah Faruk", # Your First Name
-    family = "KILIC", # Your Last Name
-    email = "afarukkilic@trakya.edu.tr", # Your email
-    role = c("aut", "cre") # Your role (here author/creator)
+  pkg_name = "FAfA",
+  pkg_title = "Factor Analysis for All",
+  pkg_description = "Provides a comprehensive Shiny-based graphical user interface for conducting a wide range of factor analysis procedures. 'FAfA' (Factor Analysis for All) guides users through data uploading, assumption checking (descriptives, collinearity, multivariate normality, outliers), data wrangling (variable exclusion, data splitting), factor retention analysis (e.g., Parallel Analysis, Hull method, EGA), Exploratory Factor Analysis (EFA) with various rotation and extraction methods, Confirmatory Factor Analysis (CFA) for model testing, Reliability Analysis (e.g., Cronbach's Alpha, McDonald's Omega), Measurement Invariance testing across groups, and item weighting techniques. The application leverages established R packages such as 'lavaan' and 'psych' to perform these analyses, offering an accessible platform for researchers and students. Results are presented in user-friendly tables and plots, with options for downloading outputs.",
+
+  authors = c(
+    person(
+      given = "Abdullah Faruk",
+      family = "KILIC",
+      email = "afarukkilic@trakya.edu.tr",
+      role = c("aut", "cre")
+    ),
+    person(
+      given = "Ahmet",
+      family = "Caliskan",
+      email = "ahmetcaliskan@trakya.edu.tr",
+      role = "aut"
+    )
   ),
-  repo_url = NULL, # The URL of the GitHub repo (optional),
-  pkg_version = "0.3", # The version of the package containing the app
-  set_options = TRUE # Set the global golem options
+
+  repo_url = "https://github.com/AFarukKILIC/FAfA/tree/master",
+  pkg_version = "0.5",
+  set_options = TRUE
 )
 
 ## Install the required dev dependencies ----
@@ -52,7 +50,7 @@ golem::install_dev_deps()
 ## See ?usethis for more information
 usethis::use_mit_license("Golem User") # You can set another license here
 golem::use_readme_rmd(open = FALSE)
-devtools::build_readme()
+
 # Note that `contact` is required since usethis version 2.1.5
 # If your {usethis} version is older, you can remove that param
 usethis::use_code_of_conduct(contact = "Golem User")
@@ -77,7 +75,7 @@ usethis::use_git()
 ## Sets the remote associated with 'name' to 'url'
 usethis::use_git_remote(
   name = "origin",
-  url = "https://github.com/<OWNER>/<REPO>.git"
+  url = "git@github.com:AFarukKILIC/FAfA.git", overwrite = T
 )
 
 # You're now set! ----
