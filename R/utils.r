@@ -6,7 +6,7 @@
 #' @rdname op_null_or
 #' @param x Left hand side
 #' @param y Right hand side
-#' @export
+#' @noRd
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0 || all(is.na(x))) y else x
 
 #' Clean Missing Data
@@ -21,7 +21,7 @@ clean_missing_data <- function(data, remove_na = TRUE) {
     data <- as.data.frame(data)
   }
 
-  # 1. Standartlaştırma: Farklı karakterleri NA'ya çevir
+  # 1. Standardisation: Different characters are converted to NA
   data_std_na <- as.data.frame(lapply(data, function(col_item) {
     if(is.character(col_item)) {
         col_item[col_item %in% c("", " ", "NA", "N/A", "na", "n/a", ".", "-", "?", "missing")] <- NA
@@ -31,7 +31,7 @@ clean_missing_data <- function(data, remove_na = TRUE) {
         col_item <- char_col
     }
 
-    # Karışık tipler için ek kontrol
+    # Karisik tipler icin ek kontrol
     if(is.character(col_item) || is.factor(col_item)){
         potential_na_mask <- is.na(col_item) | suppressWarnings(is.na(as.numeric(as.character(col_item))))
         col_item[potential_na_mask & !is.na(col_item) & !(as.character(col_item) %in% c("", " "))] <- NA
@@ -39,12 +39,12 @@ clean_missing_data <- function(data, remove_na = TRUE) {
     return(col_item)
   }))
 
-  # 2. Nümeriğe Çevirme
+  # 2. Numerige Cevirme
   data_numeric <- as.data.frame(lapply(data_std_na, function(col_item) {
       suppressWarnings(as.numeric(as.character(col_item)))
   }))
 
-  # 3. NA Silme İşlemi (Parametreye Bağlı)
+  # 3. NA Silme Islemi (Parametreye Bagli)
   original_nrow <- nrow(data_numeric)
 
   if (remove_na) {
@@ -52,7 +52,7 @@ clean_missing_data <- function(data, remove_na = TRUE) {
     removed_rows_count <- original_nrow - nrow(cleaned_data_final)
   } else {
     cleaned_data_final <- data_numeric
-    removed_rows_count <- 0 # Silme yapılmadı
+    removed_rows_count <- 0 # Silme yapilmadi
   }
 
   return(list(
@@ -61,9 +61,7 @@ clean_missing_data <- function(data, remove_na = TRUE) {
   ))
 }
 
-# ---------------------------------------------------------------------------
 # assumptions
-# ---------------------------------------------------------------------------
 #' Calculate Statistical Assumptions
 #'
 #' Calculates descriptives, multicollinearity, Mahalanobis distance, and Mardia's tests.
@@ -79,9 +77,6 @@ clean_missing_data <- function(data, remove_na = TRUE) {
 #' @importFrom stats na.omit lm as.formula model.matrix mahalanobis pchisq cov median cor
 #' @noRd
 assumptions <- function(x, mah_p_threshold = 0.001) { # Added mah_p_threshold argument
-  # Ensure input is a data.frame and has columns
-nrow(a)
-  # Ensure input is a data.frame and has columns
   if (!is.data.frame(x)) {
     x <- as.data.frame(x)
   }
@@ -110,27 +105,16 @@ nrow(a)
   if (nrow(x) > 0) { # Proceed only if data has rows
     missing_mean <- function(var) mean(var, na.rm = TRUE) # Corrected to take single var
 
-    # Use tryCatch for pastecs in case of issues with very small/odd data
-    descriptives_pastecs <- tryCatch(
-      pastecs::stat.desc(x, basic = TRUE, desc = TRUE, norm = FALSE),
-      error = function(e) {
-        warning(paste("pastecs::stat.desc failed:", e$message)); NULL
-      }
-    )
-
-    if (!is.null(descriptives_pastecs) && is.matrix(descriptives_pastecs)) {
-      if("nbr.val" %in% rownames(descriptives_pastecs)) descr[,"N"] <- descriptives_pastecs["nbr.val", ]
-      if("min" %in% rownames(descriptives_pastecs)) descr[,"Min"] <- descriptives_pastecs["min", ]
-      if("max" %in% rownames(descriptives_pastecs)) descr[,"Max"] <- descriptives_pastecs["max", ]
-      if("median" %in% rownames(descriptives_pastecs)) descr[,"Median"] <- descriptives_pastecs["median", ]
+    # Compute descriptives once on complete-case data (avoid repeated na.omit)
+    x_no_na <- stats::na.omit(x)
+    descr[, "N"]            <- nrow(x)
+    descr[, "N (missing)"]  <- colSums(is.na(x))
+    if (nrow(x_no_na) > 0) {
+      descr[, "Min"]    <- apply(x_no_na, 2, min)
+      descr[, "Max"]    <- apply(x_no_na, 2, max)
+      descr[, "Median"] <- apply(x_no_na, 2, stats::median)
     }
-
-    descr[,"N"] <- nrow(x)
-    descr[,"N (missing)"] <- colSums(apply(x, 2, is.na))
-    descr[,"Min"] <- apply(na.omit(x), 2, min)
-    descr[,"Max"] <- apply(na.omit(x), 2, max)
-    descr[,"Median"] <- apply(na.omit(x), 2, median)
-    descr[,"Mean"] <- apply(x, 2, missing_mean) # User's original
+    descr[, "Mean"] <- colMeans(x, na.rm = TRUE)
 
     # Skewness and Kurtosis from 'moments' package
     if(nrow(x) >= 1 && ncol(x) >=1){
@@ -243,21 +227,24 @@ nrow(a)
     warning("Not enough complete cases (N < 2 or N <= P) for some assumption checks.")
   }
 
-  # --- Return List (User's Naming Convention for Mardia) ---
+  # MVN table: Mardia Skewness + Kurtosis
+  mvn_table <- rbind(mardia_skew_result_df, mardia_kurt_result_df)
+  rownames(mvn_table) <- NULL
+
+  # --- Return List ---
   return(list(
-    descriptives = round(descr, 2),
+    descriptives      = round(descr, 2),
     multicollinearity = round(mc_control, 2),
-    Mah_significant = Mah_significant, # This is already a data.frame
-    n_outlier = n_outlier,             # This is nrow(Mah_significant)
-    Mardia_Kurtosis = mardia_kurt_result_df, # This is the 1-row data.frame
-    Mardia_Skewness = mardia_skew_result_df  # This is the 1-row data.frame
+    Mah_significant   = Mah_significant,
+    n_outlier         = n_outlier,
+    Mardia_Kurtosis   = mardia_kurt_result_df,
+    Mardia_Skewness   = mardia_skew_result_df,
+    mvn_table         = mvn_table          # All MVN tests in one data frame
   ))
 }
 
 
-# ---------------------------------------------------------------------------
 # factor_ret
-# ---------------------------------------------------------------------------
 #' Factor Retention Methods
 #'
 #' Applies methods to suggest the number of factors to retain.
@@ -365,9 +352,7 @@ factor_ret <- function(x, method = "hull_method") {
   }
 }
 
-# ---------------------------------------------------------------------------
 # reliability_func
-# ---------------------------------------------------------------------------
 #' Calculate Reliability Coefficients
 #'
 #' Calculates various reliability coefficients like Alpha, Omega, Theta, etc.
@@ -441,10 +426,19 @@ reliability_func <- function(x, method = "alpha", cor_kind = "cor", defined_stru
         stop("CFA model structure must be defined for 'structural' reliability.")
       }
       manifest_vars_rel <- unique(unlist(lavaan::lavaanify(defined_structure)$rhs[lavaan::lavaanify(defined_structure)$op == "=~"]))
-      ordered_arg_rel <- if (cor_kind == "poly" && length(manifest_vars_rel) > 0) manifest_vars_rel else FALSE
-      estimator_rel <- ifelse(any(as.logical(ordered_arg_rel)), "WLSMV", "ML")
+      is_ordinal_rel <- cor_kind == "poly" && length(manifest_vars_rel) > 0
+      ordered_arg_rel <- if (is_ordinal_rel) manifest_vars_rel else FALSE
+      estimator_rel <- if (is_ordinal_rel) "WLSMV" else "MLR"
 
-      cfa_model_fit <- lavaan::cfa(model = defined_structure, data = x_complete, ordered = ordered_arg_rel, estimator = estimator_rel, warn = FALSE)
+      cfa_model_fit <- lavaan::cfa(
+        model = defined_structure,
+        data = x_complete,
+        ordered = ordered_arg_rel,
+        estimator = estimator_rel,
+        missing = "listwise",
+        mimic = "Mplus",
+        warn = FALSE
+      )
       structural_rel_matrix <- semTools::reliability(cfa_model_fit)
       return(sprintf("%.3f", structural_rel_matrix[5, 1]))
     } else if (method == "s_alpha") {
@@ -459,8 +453,61 @@ reliability_func <- function(x, method = "alpha", cor_kind = "cor", defined_stru
       item_names_strata <- colnames(x_complete)
       strata_matrix_sirt <- data.frame(item = item_names_strata, stratum = strata_num_vector)
 
-      s_alpha_results <- sirt::stratified.cronbach.alpha(dat = x_complete, itemstrata = strata_matrix_sirt)
+      s_alpha_results <- NULL
+      invisible(utils::capture.output({
+        s_alpha_results <- suppressMessages(suppressWarnings(
+          sirt::stratified.cronbach.alpha(
+            dat = x_complete,
+            itemstrata = strata_matrix_sirt
+          )
+        ))
+      }))
       s_alpha_results$alpha.stratified[1]
+    } else if (method == "omega_h") {
+      omega_res <- tryCatch(
+        psych::omega(x_complete, plot = FALSE, fm = "pa"),
+        error = function(e) NULL
+      )
+      if (!is.null(omega_res) && "omega_h" %in% names(omega_res)) {
+        return(omega_res$omega_h)
+      }
+      warning("omega_h: psych::omega failed or omega_h not found.")
+      return(NA_real_)
+
+    } else if (method == "cr") {
+      if (is.null(defined_structure) || nchar(trimws(defined_structure)) == 0) {
+        stop("A lavaan CFA model syntax is required for Composite Reliability (CR) and AVE.")
+      }
+      manifest_vars_cr <- unique(unlist(
+        lavaan::lavaanify(defined_structure)$rhs[lavaan::lavaanify(defined_structure)$op == "=~"]
+      ))
+      is_ordinal_cr <- cor_kind == "poly" && length(manifest_vars_cr) > 0
+      ordered_arg_cr <- if (is_ordinal_cr) manifest_vars_cr else FALSE
+      estimator_cr   <- if (is_ordinal_cr) "WLSMV" else "MLR"
+
+      cfa_fit_cr <- lavaan::cfa(
+        model = defined_structure, data = x_complete,
+        ordered = ordered_arg_cr,
+        estimator = estimator_cr,
+        missing = "listwise",
+        mimic = "Mplus",
+        warn = FALSE
+      )
+      std_sol_cr  <- lavaan::standardizedSolution(cfa_fit_cr)
+      load_rows   <- std_sol_cr[std_sol_cr$op == "=~", , drop = FALSE]
+      factors     <- unique(load_rows$lhs)
+
+      lines <- vapply(factors, function(f) {
+        l       <- load_rows[load_rows$lhs == f, "est.std"]
+        l       <- l[!is.na(l)]
+        cr_val  <- sum(l)^2 / (sum(l)^2 + sum(1 - l^2))
+        ave_val <- sum(l^2) / (sum(l^2) + sum(1 - l^2))
+        sprintf("%s  ->  CR = %.3f  |  AVE = %.3f", f, cr_val, ave_val)
+      }, character(1))
+
+      header <- paste0(rep("-", 42), collapse = "")
+      return(paste(c(header, lines, header), collapse = "\n"))
+
     } else {
       stop(paste("Unknown reliability method:", method))
     }
@@ -469,16 +516,16 @@ reliability_func <- function(x, method = "alpha", cor_kind = "cor", defined_stru
     return(NA_real_)
   })
 
-  if (is.na(result_value)) {
+  if (is.character(result_value) && length(result_value) == 1) {
+    return(result_value)
+  } else if (is.na(result_value)) {
     return("Calculation failed or N/A.")
   } else {
     return(sprintf("%.3f", as.numeric(result_value)))
   }
 }
 
-# ---------------------------------------------------------------------------
 # item_weighting
-# ---------------------------------------------------------------------------
 #' Item Weighting Function
 #'
 #' Applies a specific item weighting algorithm.
@@ -511,4 +558,29 @@ item_weighting <- function(x) {
     }
   }
   return(weighted_data)
+}
+
+#' Validate dataset for analysis
+#'
+#' Checks minimum sample size, variable count, and numeric requirement.
+#' Designed to be used inside `validate()` calls or as guard.
+#'
+#' @param data A data.frame.
+#' @param min_n Minimum required complete cases. Default 10.
+#' @param min_p Minimum required variables. Default 2.
+#' @param require_numeric If TRUE, all variables must be numeric. Default TRUE.
+#' @return NULL if OK, otherwise a character message describing the problem.
+#' @noRd
+validate_data <- function(data, min_n = 10, min_p = 2, require_numeric = TRUE) {
+  if (is.null(data))                        return("Please load a dataset first.")
+  if (!is.data.frame(data))                 return("Input must be a data frame.")
+  if (ncol(data) < min_p)
+    return(sprintf("At least %d variables required (found %d).", min_p, ncol(data)))
+  n_complete <- sum(stats::complete.cases(data))
+  if (n_complete < min_n)
+    return(sprintf("At least %d complete cases required (found %d). ",
+                   min_n, n_complete))
+  if (require_numeric && !all(sapply(data, is.numeric)))
+    return("All variables must be numeric for this analysis.")
+  NULL
 }
